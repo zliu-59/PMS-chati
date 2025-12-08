@@ -58,59 +58,48 @@ async function sendToServer(text) {
   if (!text.trim() || isSending) return;
   isSending = true;
 
-  // 显示用户消息
   addMessage(text, "user");
   inputEl.value = "";
-  inputEl.focus();
-
-  // 显示 typing
   showTyping();
 
   try {
-    const res = await fetch("/api/chat", {
+    const res = await fetch("/api/chat", {   // ✅ 只写 /api/chat
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify({ message: text })
     });
 
     const data = await res.json();
-    console.log("API response:", data);
 
     let answer = "";
 
-    // StackAI 的标准输出：data.outputs.{某个 key}
-    if (data.outputs && typeof data.outputs === "object") {
+    if (data.outputs) {
       const firstKey = Object.keys(data.outputs)[0];
       answer = data.outputs[firstKey];
     } else {
-      // 兼容其它字段名
-      answer = data.output_text || data.output || data.answer || JSON.stringify(data);
+      answer = data.output_text || data.answer || JSON.stringify(data);
     }
 
-    // 简单清洗：去掉 markdown 标题 & 脚注
-    if (typeof answer === "string") {
-      answer = answer
-        .replace(/^#.*\n/, "")          // 去掉第一行 # 标题
-        .replace(/\[\^[^\]]+\]/g, "")   // 去掉脚注 [^xxx]
-        .trim();
-    }
+    answer = answer
+      ?.replace(/^#.*\n/, "")
+      ?.replace(/\[\^[^\]]+\]/g, "")
+      ?.trim();
 
     removeTyping();
     addMessage(
-      answer || "I’m here with you, but I didn’t get a response this time. 💗",
+      answer || "I’m here with you, but I didn’t get a response. 💗",
       "bot"
     );
+
   } catch (err) {
-    console.error("Client error:", err);
+    console.error(err);
     removeTyping();
-    addMessage(
-      "Something went wrong while connecting to Chati. You can try again in a moment. 💗",
-      "bot"
-    );
-  } finally {
-    isSending = false;
+    addMessage("Something went wrong. Please try again. 💗", "bot");
   }
+
+  isSending = false;
 }
+
 
 // 点击发送按钮
 function handleSend() {
