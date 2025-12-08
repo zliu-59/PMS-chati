@@ -74,9 +74,15 @@ async function sendToServer(text) {
 
     // 清洗无用内容
     answer = answer
-      ?.replace(/^#.*\n/, "")
-      ?.replace(/\[\^[^\]]+\]/g, "")
-      ?.trim();
+  // 删掉所有行首的 # / ## / ### 标题符号
+  ?.replace(/^#+\s*/gm, "")
+  // 去掉 **粗体** 符号
+  ?.replace(/\*\*(.*?)\*\*/g, "$1")
+  // 去掉脚注标记 [^123.1.1]
+  ?.replace(/\[\^[^\]]+\]/g, "")
+  // 收尾空白
+  ?.trim();
+
 
     removeTyping();
     addMessage(answer || "I’m here with you, but I didn’t get a response. 💗", "bot");
