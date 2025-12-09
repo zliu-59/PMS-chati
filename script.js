@@ -6,6 +6,11 @@ const chipButtons = document.querySelectorAll(".chip");
 let isSending = false;
 let typingRow = null;
 
+function cleanAnswer(text) {
+  if (!text) return "";
+  return text.replace(/^Output of Anthropic\s*/i, "");
+}
+
 // 添加聊天气泡
 function addMessage(text, role = "bot") {
   const row = document.createElement("div");
@@ -81,6 +86,8 @@ async function sendToServer(text) {
   ?.replace(/\[\^[^\]]+\]/g, "")
   // 收尾空白
   ?.trim();
+  // ✅ 删除模型前缀 “Output of Anthropic”
+    answer = cleanAnswer(answer);
 
 
     removeTyping();
