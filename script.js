@@ -45,21 +45,6 @@ function showTyping() {
   typingRow = row;
 }
 
-// 移除 typing 行
-function removeTyping() {
-  if (typingRow && typingRow.parentNode) {
-    typingRow.parentNode.removeChild(typingRow);
-  }
-  typingRow = null;
-}
-function cleanAnswer(text: string) {
-  return text.replace(/^Output of Anthropic\s*/i, '');
-}
-
-// 渲染时
-<p>{cleanAnswer(answerFromApi)}</p>
-
-
 // 发送到后端 /api/chat
 async function sendToServer(text) {
   if (!text.trim() || isSending) return;
