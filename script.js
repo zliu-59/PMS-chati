@@ -6,6 +6,11 @@ const chipButtons = document.querySelectorAll(".chip");
 let isSending = false;
 let typingRow = null;
 
+// 删除模型前缀 “Output of Anthropic”
+function cleanAnswer(text) {
+  if (!text) return "";
+  return text.replace(/^Output of Anthropic\s*/i, "");
+}
 
 // 添加聊天气泡
 function addMessage(text, role = "bot") {
@@ -46,6 +51,14 @@ function showTyping() {
   typingRow = row;
 }
 
+// 移除 typing 行
+function removeTyping() {
+  if (typingRow && typingRow.parentNode) {
+    typingRow.parentNode.removeChild(typingRow);
+  }
+  typingRow = null;
+}
+
 // 发送到后端 /api/chat
 async function sendToServer(text) {
   if (!text.trim() || isSending) return;
@@ -56,7 +69,7 @@ async function sendToServer(text) {
   showTyping();
 
   try {
-    const res = await fetch("/api/chat", {   // ✅ 只写 /api/chat
+    const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text })
@@ -73,24 +86,21 @@ async function sendToServer(text) {
       answer = data.output_text || data.answer || JSON.stringify(data);
     }
 
+    // 基础清洗：去掉 markdown 标题 / 粗体 / 脚注
     answer = answer
-  // 删掉所有行首的 # / ## / ### 标题符号
-  ?.replace(/^#+\s*/gm, "")
-  // 去掉 **粗体** 符号
-  ?.replace(/\*\*(.*?)\*\*/g, "$1")
-  // 去掉脚注标记 [^123.1.1]
-  ?.replace(/\[\^[^\]]+\]/g, "")
-  // 收尾空白
-  ?.trim();
+      ?.replace(/^#+\s*/gm, "")          // # / ## / ###
+      ?.replace(/\*\*(.*?)\*\*/g, "$1")  // **粗体**
+      ?.replace(/\[\^[^\]]+\]/g, "")     // [^123.1.1]
+      ?.trim();
 
-
+    // 额外清洗：删除 “Output of Anthropic”
+    answer = cleanAnswer(answer);
 
     removeTyping();
     addMessage(
       answer || "I’m here with you, but I didn’t get a response. 💗",
       "bot"
     );
-
   } catch (err) {
     console.error(err);
     removeTyping();
@@ -99,7 +109,6 @@ async function sendToServer(text) {
 
   isSending = false;
 }
-
 
 // 点击发送按钮
 function handleSend() {
@@ -125,4 +134,5 @@ chipButtons.forEach((btn) => {
     sendToServer(text);
   });
 });
+
 
